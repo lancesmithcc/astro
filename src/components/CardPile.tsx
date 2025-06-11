@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { gsap } from 'gsap';
 import { TarotCard } from '../types';
 import { tarotAPI } from '../services/tarotAPI';
+import TarotCardModal from './TarotCardModal';
 
 interface CardPileProps {
   onCardsSelected: (cards: TarotCard[]) => void;
@@ -12,6 +13,8 @@ const CardPile: React.FC<CardPileProps> = ({ onCardsSelected }) => {
   const [selectedCards, setSelectedCards] = useState<TarotCard[]>([]);
   const [revealedIndices, setRevealedIndices] = useState<Set<number>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
+  const [expandedCard, setExpandedCard] = useState<TarotCard | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     fetchTarotDeck();
@@ -143,6 +146,17 @@ const CardPile: React.FC<CardPileProps> = ({ onCardsSelected }) => {
     }
   };
 
+  const handleCardExpand = (card: TarotCard, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent triggering the card selection
+    setExpandedCard(card);
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+    setExpandedCard(null);
+  };
+
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
     const img = e.target as HTMLImageElement;
     const fallbackDiv = img.nextElementSibling as HTMLElement;
@@ -178,6 +192,7 @@ const CardPile: React.FC<CardPileProps> = ({ onCardsSelected }) => {
               zIndex: revealedIndices.has(index) ? 200 + selectedCards.indexOf(card) : Math.floor(Math.random() * 25),
             }}
             onClick={() => handleCardClick(card, index)}
+            onDoubleClick={(e) => handleCardExpand(card, e)}
           >
             <div className="w-20 h-32 relative group">
               {revealedIndices.has(index) ? (
@@ -210,7 +225,10 @@ const CardPile: React.FC<CardPileProps> = ({ onCardsSelected }) => {
                   {/* Overlay with card name for images */}
                   {card.image && (
                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent 
-                                   flex flex-col justify-end p-2 rounded-lg">
+                                   flex flex-col justify-between p-2 rounded-lg">
+                      <div className="text-right opacity-0 group-hover:opacity-100 transition-opacity">
+                        <span className="text-xs text-white/80">Double-click to expand 🔍</span>
+                      </div>
                       <h4 className="text-xs font-bold text-white leading-tight">{card.name}</h4>
                     </div>
                   )}
@@ -252,8 +270,11 @@ const CardPile: React.FC<CardPileProps> = ({ onCardsSelected }) => {
           </p>
           <div className="flex justify-center space-x-8">
             {selectedCards.map((card, index) => (
-              <div key={index} className="text-center transform hover:scale-105 transition-transform duration-300">
-                <div className="w-24 h-36 rounded-lg overflow-hidden mystical-shadow border-2 border-aurora-400 relative bg-gradient-to-b from-cosmic-800 to-cosmic-900">
+              <div key={index} className="text-center transform hover:scale-105 transition-transform duration-300 group">
+                <div 
+                  className="w-24 h-36 rounded-lg overflow-hidden mystical-shadow border-2 border-aurora-400 relative bg-gradient-to-b from-cosmic-800 to-cosmic-900 cursor-pointer" 
+                  onClick={(e) => handleCardExpand(card, e)}
+                >
                   {card.image ? (
                     <>
                       <img 
@@ -264,7 +285,10 @@ const CardPile: React.FC<CardPileProps> = ({ onCardsSelected }) => {
                         crossOrigin="anonymous"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent 
-                                     flex flex-col justify-end p-2 rounded-lg">
+                                     flex flex-col justify-between p-2 rounded-lg group-hover:from-black/80">
+                        <div className="text-right opacity-0 group-hover:opacity-100 transition-opacity">
+                          <span className="text-xs text-white/80">Click to expand 🔍</span>
+                        </div>
                         <h5 className="text-xs font-bold text-white leading-tight shadow-text">{card.name}</h5>
                       </div>
                     </>
@@ -291,6 +315,12 @@ const CardPile: React.FC<CardPileProps> = ({ onCardsSelected }) => {
           </div>
         </div>
       )}
+
+      <TarotCardModal
+        card={expandedCard}
+        isOpen={isModalOpen}
+        onClose={handleModalClose}
+      />
     </div>
   );
 };

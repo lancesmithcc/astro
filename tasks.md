@@ -53,4 +53,12 @@
    - Error handling and loading states
 
 ### Ready for Use:
-The tarot card system now displays actual card images fetched from the API, with proper fallbacks and animations. The integration is complete and functional! 
+The tarot card system now displays actual card images fetched from the API, with proper fallbacks and animations. The integration is complete and functional!
+
+## Phase 5: Enhanced User Experience
+- ✅ Add card expansion/modal functionality
+  - Double-click cards in pile to expand (blow up) to full details
+  - Single-click selected cards to expand them
+  - Modal displays large card image, meanings, keywords, and descriptions
+  - Smooth animations and mystical styling
+  - Proper backdrop and close functionality 
