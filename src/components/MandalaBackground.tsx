@@ -56,7 +56,7 @@ const MandalaBackground: React.FC = () => {
 
       // Very slow rotation
       gsap.to(layerGroup, {
-        rotation: 360,
+        rotation: 555,
         duration: rotationSpeed,
         ease: 'none',
         repeat: -1

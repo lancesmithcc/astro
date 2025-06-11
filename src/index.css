@@ -16,9 +16,45 @@
   }
   
   body {
-    background: #0f0f23 url('/space.svg') center center / cover no-repeat fixed;
-    background-attachment: fixed; /* Ensures background stays in place during scroll */
-    background-size: cover; /* Ensures the SVG covers the entire viewport */
+    /* Set the cosmic gradient as the base background, using CSS variables for dynamic daily colors */
+    background: linear-gradient(135deg, var(--gradient-start, #7c3aed), var(--gradient-end, #a21caf));
+    background-size: cover;
+    background-position: center center;
+    background-attachment: fixed;
+    position: relative; /* Needed for the pseudo-element */
+    z-index: 1; /* Establish a stacking context */
+  }
+  
+  /* Create a pseudo-element to apply the edge blur */
+  body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 0; /* Sit on top of the ::after pseudo-element */
+    backdrop-filter: blur(8px); /* The blur effect */
+    /* This mask creates a "hole" in the blur layer, making the center sharp */
+    mask-image: radial-gradient(ellipse at center, transparent 50%, black 100%);
+    pointer-events: none; /* Make sure it doesn't interfere with clicks */
+  }
+  
+  /* Create a pseudo-element to hold the starfield overlay */
+  body::after {
+    content: '';
+    position: fixed; /* Cover the entire viewport */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-image: url('/space.svg');
+    background-size: cover;
+    background-position: center center;
+    opacity: 0.5; /* Adjust for desired star visibility */
+    z-index: -1; /* Place it behind the body's content */
+    animation: zoomInOut 45s ease-in-out infinite; /* Added hypnotic zoom effect */
+    will-change: transform; /* Optimize for smooth, cool animation */
   }
   
   /* Responsive background handling for mobile devices */
@@ -36,8 +72,6 @@
     min-height: 100vh;
     min-height: 100dvh; /* Use dynamic viewport height for better mobile support */
     position: relative;
-    /* The root element should not have its own background, so the body's background is visible */
-    background: transparent; 
   }
 }
 
@@ -77,4 +111,27 @@
   .rotate-y-180 {
     transform: rotateY(180deg);
   }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
 }
+
+/* Keyframes for the hypnotic background zoom effect */
+@keyframes zoomInOut {
+  0% {
+    transform: scale(1.1);
+  }
+  50% {
+    transform: scale(1.3);
+  }
+  100% {
+    transform: scale(1.1);
+  }
+}
+h1{font-size:55px;}

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { Send, Sparkles, Star, Brain, Zap, MessageCircle } from 'lucide-react';
+import { TypeAnimation } from 'react-type-animation';
 import CardPile from './CardPile';
 import BirthdateInput, { BirthData } from './BirthdateInput';
 import { generateEnhancedInitialQuestion, generateEnhancedFollowUpQuestion, generateEnhancedInsight, analyzeResponseDepth, generateEnergyUpdate } from '../utils/enhancedDeepseekEngine';
@@ -8,6 +9,8 @@ import { calculateEvolutionaryAstrology, generateAstrologyInsight, AstrologyData
 import { performDeepAnalysis, DeepAnalysis } from '../utils/deepAnalysisEngine';
 import { analyzeTextEnergy, analyzeCumulativeEnergy } from '../utils/textEnergyAnalyzer';
 import { TarotCard } from '../types';
+import { preloadCardImages } from '../utils/imagePreloader';
+import { getDailyGradient } from '../utils/dailyColor';
 
 interface Message {
   id: string;
@@ -47,6 +50,17 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onSignChange, onCardsChan
   const [finalReading, setFinalReading] = useState<string>(''); // Store the final reading for reference
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+
+  // Set the daily gradient and preload images on initial app load
+  useEffect(() => {
+    // Set daily gradient
+    const { colorStart, colorEnd } = getDailyGradient();
+    document.documentElement.style.setProperty('--gradient-start', colorStart);
+    document.documentElement.style.setProperty('--gradient-end', colorEnd);
+
+    // Preload card images
+    preloadCardImages();
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
@@ -133,13 +147,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onSignChange, onCardsChan
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const addMysticMessage = (content: string, type: 'mystic' | 'analysis' | 'astrology' | 'deep-analysis' | 'clarifying-response' = 'mystic', astroData?: AstrologyData, deepAnalysisData?: DeepAnalysis) => {
+  const addMysticMessage = (content: string, type: 'mystic' | 'analysis' | 'astrology' | 'deep-analysis' | 'clarifying-response' = 'mystic', astroData?: AstrologyData, deepAnalysis?: DeepAnalysis) => {
     setIsTyping(true);
     
     // Analyze the mystic response for energy too with IMMEDIATE background activation
     const responseEnergy = analyzeTextEnergy(content);
     console.log('🔮 Mystic response energy detected:', responseEnergy);
     
+    // Short delay to allow the "isTyping" indicator to appear briefly before animation starts
     setTimeout(() => {
       const newMessage: Message = {
         id: Date.now().toString(),
@@ -148,7 +163,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onSignChange, onCardsChan
         timestamp: new Date(),
         astroData,
         energySignature: responseEnergy,
-        deepAnalysis: deepAnalysisData
+        deepAnalysis: deepAnalysis
       };
       setMessages(prev => [...prev, newMessage]);
       setIsTyping(false);
@@ -158,7 +173,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onSignChange, onCardsChan
         console.log('🌟 FORCING IMMEDIATE mystic energy background activation:', responseEnergy.primarySign);
         onSignChange(responseEnergy.primarySign);
       }
-    }, 1500 + Math.random() * 2000);
+    }, 500); // Reduced delay from ~2s to 0.5s
   };
 
   const handleBirthdateSubmit = (birthInfo: BirthData) => {
@@ -301,7 +316,7 @@ Time to let three cards choose you. Your ${astroData?.moonSign} Moon knows exact
       if (deepAnalysis) {
         const followUp = generateEnhancedFollowUpQuestion(selectedCards, userResponses, deepAnalysis);
         const astroContext = astroData ? `Your ${astroData.northNode.split(' - ')[0]} North Node is asking: ${followUp}` : followUp;
-        addMysticMessage(astroContext, 'deep-analysis', astroData, deepAnalysis);
+        addMysticMessage(astroContext, 'deep-analysis', astroData || undefined, deepAnalysis || undefined);
       }
       setCurrentStep('final');
     } else if (currentStep === 'final') {
@@ -309,7 +324,7 @@ Time to let three cards choose you. Your ${astroData?.moonSign} Moon knows exact
       setTimeout(() => {
         const enhancedInsight = generateEnhancedInsight(selectedCards, [...userResponses, currentInput], birthData, astroData);
         setFinalReading(enhancedInsight); // Store the final reading
-        addMysticMessage(enhancedInsight, 'analysis', astroData, deepAnalysis);
+        addMysticMessage(enhancedInsight, 'analysis', astroData || undefined, deepAnalysis || undefined);
         
         // Mark reading as complete and switch to clarifying mode
         setReadingComplete(true);
@@ -319,7 +334,7 @@ Time to let three cards choose you. Your ${astroData?.moonSign} Moon knows exact
       // USER ASKS CLARIFYING QUESTIONS - AI responds to their questions about the reading
       setTimeout(() => {
         const clarifyingResponse = generateClarifyingResponse(currentInput, selectedCards, deepAnalysis, finalReading);
-        addMysticMessage(clarifyingResponse, 'clarifying-response', astroData, deepAnalysis);
+        addMysticMessage(clarifyingResponse, 'clarifying-response', astroData || undefined, deepAnalysis || undefined);
       }, 1500);
     }
 
@@ -385,7 +400,7 @@ ${cards[2].name} + your ${astroData?.northNode.split(' - ')[0]} growth edge = Th
 
 Your ${astroData?.moonSign} Moon is asking: When you look at these three cards and think about your actual situation - what's the first insight that hits you? What do these symbols make you realize about what you're really dealing with?`;
       
-      addMysticMessage(cardAnalysis, 'deep-analysis', astroData, cardsAnalysis);
+      addMysticMessage(cardAnalysis, 'deep-analysis', astroData || undefined, cardsAnalysis || undefined);
       setCurrentStep('deeper');
     }, 3000);
   };
@@ -432,8 +447,8 @@ Your ${astroData?.moonSign} Moon is asking: When you look at these three cards a
       <div className="p-6 text-center border-b border-cosmic-700/30">
         <div className="flex items-center justify-center space-x-2 mb-2">
           <Star className="w-6 h-6 text-cosmic-400 animate-pulse" />
-          <h1 className="text-2xl font-bold bg-gradient-to-r from-cosmic-400 to-aurora-400 bg-clip-text text-transparent">
-            {currentStep === 'clarifying' ? 'Ask Questions About Your Reading' : 'Situational Cosmic Analysis'}
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-cosmic-800 to-aurora-800 bg-clip-text text-transparent">
+            {currentStep === 'clarifying' ? 'Ask Questions About Your Reading' : 'AstroScan'}
           </h1>
           {currentStep === 'clarifying' ? (
             <MessageCircle className="w-6 h-6 text-green-400 animate-pulse" />
@@ -493,7 +508,7 @@ Your ${astroData?.moonSign} Moon is asking: When you look at these three cards a
           </div>
         )}
 
-        {messages.map((message) => (
+        {messages.map((message, index) => (
           <div
             key={message.id}
             className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
@@ -585,7 +600,18 @@ Your ${astroData?.moonSign} Moon is asking: When you look at these three cards a
                 )}
                 
                 <p className="text-cosmic-100 leading-relaxed whitespace-pre-line">
-                  {message.content}
+                  {['mystic', 'analysis', 'astrology', 'deep-analysis', 'clarifying-response'].includes(message.type) && index === messages.length - 1 ? (
+                    <TypeAnimation
+                      sequence={[message.content]}
+                      wrapper="span"
+                      speed={99}
+                      cursor={true}
+                      repeat={0}
+                      style={{ display: 'inline-block' }}
+                    />
+                  ) : (
+                    message.content
+                  )}
                 </p>
                 
                 {message.cards && (

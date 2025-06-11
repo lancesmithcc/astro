@@ -111,4 +111,14 @@ class TarotAPIService {
   }
 }
 
-export const tarotAPI = new TarotAPIService(); 
+export const tarotAPI = new TarotAPIService();
+
+/**
+ * Constructs the full image URL for a given card's short name.
+ * Uses the public domain Rider-Waite deck images from sacred-texts.com.
+ * @param nameShort - The short name of the card (e.g., 'ar01', 'cu02').
+ * @returns The full URL to the card's image.
+ */
+export const getCardImageUrl = (nameShort: string): string => {
+  return `https://www.sacred-texts.com/tarot/pkt/img/${nameShort}.jpg`;
+}; 
