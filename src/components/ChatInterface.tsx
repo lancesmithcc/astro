@@ -51,6 +51,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onSignChange, onCardsChan
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
 
+  // NEW: Optimize GSAP ticker FPS to reduce CPU/GPU load without removing animations
+  useEffect(() => {
+    try {
+      gsap.ticker.fps(30); // Throttle animation updates to ~30fps
+    } catch (e) {
+      console.warn('GSAP not available to set fps', e);
+    }
+  }, []);
+
   // Set the daily gradient and preload images on initial app load
   useEffect(() => {
     // Set daily gradient

@@ -203,6 +203,7 @@ const CardPile: React.FC<CardPileProps> = ({ onCardsSelected }) => {
                     <img 
                       src={card.image} 
                       alt={card.name}
+                      loading="lazy"
                       className="w-full h-full object-cover rounded-lg"
                       onError={handleImageError}
                       crossOrigin="anonymous"
@@ -280,6 +281,7 @@ const CardPile: React.FC<CardPileProps> = ({ onCardsSelected }) => {
                       <img 
                         src={card.image} 
                         alt={card.name}
+                        loading="lazy"
                         className="w-full h-full object-cover rounded-lg"
                         onError={handleImageError}
                         crossOrigin="anonymous"

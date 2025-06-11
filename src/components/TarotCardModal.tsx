@@ -80,6 +80,7 @@ const TarotCardModal: React.FC<TarotCardModalProps> = ({ card, isOpen, onClose }
                 <img
                   src={card.image}
                   alt={card.name}
+                  loading="lazy"
                   className="w-full h-full object-cover"
                   onLoad={handleImageLoad}
                   onError={handleImageError}
