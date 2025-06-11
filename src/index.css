@@ -36,8 +36,8 @@
     min-height: 100vh;
     min-height: 100dvh; /* Use dynamic viewport height for better mobile support */
     position: relative;
-    /* Add a subtle overlay to ensure text readability over the animated background */
-    background: rgba(15, 15, 35, 0.1);
+    /* The root element should not have its own background, so the body's background is visible */
+    background: transparent; 
   }
 }
 
