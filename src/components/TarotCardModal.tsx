@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { TarotCard } from '../types';
 
 interface TarotCardModalProps {
@@ -8,16 +8,38 @@ interface TarotCardModalProps {
 }
 
 const TarotCardModal: React.FC<TarotCardModalProps> = ({ card, isOpen, onClose }) => {
+  const [imageError, setImageError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
+
   if (!isOpen || !card) return null;
 
+  // Debug: log card data
+  console.log('Modal card data:', {
+    name: card.name,
+    image: card.image,
+    suit: card.suit,
+    hasKeywords: card.keywords?.length > 0,
+    hasUpright: !!card.upright,
+    hasReversed: !!card.reversed
+  });
+
   const handleImageError = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    const img = e.target as HTMLImageElement;
-    const fallback = img.nextElementSibling as HTMLElement;
-    if (fallback) {
-      img.style.display = 'none';
-      fallback.style.display = 'flex';
-    }
+    console.log('Image failed to load:', card?.image, 'for card:', card?.name);
+    setImageError(true);
+    setImageLoading(false);
   };
+
+  const handleImageLoad = () => {
+    console.log('Image loaded successfully:', card.image);
+    setImageError(false);
+    setImageLoading(false);
+  };
+
+  // Reset image states when card changes
+  React.useEffect(() => {
+    setImageError(false);
+    setImageLoading(true);
+  }, [card?.name]);
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -43,28 +65,40 @@ const TarotCardModal: React.FC<TarotCardModalProps> = ({ card, isOpen, onClose }
             <div className="flex justify-center">
               <div className="relative">
                 <div className="w-64 h-96 rounded-xl overflow-hidden mystical-shadow border-2 border-aurora-400 bg-gradient-to-b from-cosmic-800 to-cosmic-900">
-                  {card.image ? (
+                  {card.image && !imageError ? (
                     <>
+                      {/* Loading placeholder */}
+                      {imageLoading && (
+                        <div className="w-full h-full bg-gradient-to-br from-cosmic-700 via-aurora-700 to-cosmic-600 flex items-center justify-center absolute inset-0 rounded-xl">
+                          <div className="text-center text-white p-4">
+                            <div className="animate-spin w-8 h-8 border-2 border-white border-t-transparent rounded-full mx-auto mb-4"></div>
+                            <div className="font-bold text-lg">Loading...</div>
+                          </div>
+                        </div>
+                      )}
+                      
                       <img
                         src={card.image}
                         alt={card.name}
                         className="w-full h-full object-cover rounded-xl"
+                        onLoad={handleImageLoad}
                         onError={handleImageError}
-                        crossOrigin="anonymous"
+                        style={{ display: imageLoading ? 'none' : 'block' }}
                       />
-                      {/* Fallback for card image */}
-                      <div className="w-full h-full bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center absolute inset-0 rounded-xl" style={{ display: 'none' }}>
-                        <div className="text-center text-purple-600">
-                          <div className="text-6xl mb-4">🃏</div>
-                          <div className="font-semibold text-lg">{card.suit}</div>
-                        </div>
-                      </div>
                     </>
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center">
-                      <div className="text-center text-purple-600">
+                    /* Fallback display */
+                    <div className="w-full h-full bg-gradient-to-br from-cosmic-700 via-aurora-700 to-cosmic-600 flex items-center justify-center">
+                      <div className="text-center text-white p-4">
                         <div className="text-6xl mb-4">🃏</div>
-                        <div className="font-semibold text-lg">{card.suit}</div>
+                        <div className="font-bold text-xl mb-2">{card.name}</div>
+                        <div className="font-semibold text-lg opacity-80 mb-2">{card.suit}</div>
+                        {card.keywords?.[0] && (
+                          <div className="text-sm opacity-70 italic">"{card.keywords[0]}"</div>
+                        )}
+                        <div className="text-xs mt-2 opacity-50">
+                          {imageError ? 'Image unavailable' : 'No image URL'}
+                        </div>
                       </div>
                     </div>
                   )}
@@ -112,20 +146,24 @@ const TarotCardModal: React.FC<TarotCardModalProps> = ({ card, isOpen, onClose }
               {/* Meanings */}
               <div className="space-y-4">
                 {/* Upright */}
-                <div className="bg-cosmic-800/50 rounded-lg p-4 border border-green-500/30">
-                  <h3 className="text-lg font-semibold text-green-400 mb-2 flex items-center">
-                    <span className="mr-2">⬆️</span> Upright Meaning
-                  </h3>
-                  <p className="text-cosmic-100 leading-relaxed">{card.upright}</p>
-                </div>
+                {card.upright && (
+                  <div className="bg-cosmic-800/50 rounded-lg p-4 border border-green-500/30">
+                    <h3 className="text-lg font-semibold text-green-400 mb-2 flex items-center">
+                      <span className="mr-2">⬆️</span> Upright Meaning
+                    </h3>
+                    <p className="text-cosmic-100 leading-relaxed">{card.upright}</p>
+                  </div>
+                )}
 
                 {/* Reversed */}
-                <div className="bg-cosmic-800/50 rounded-lg p-4 border border-red-500/30">
-                  <h3 className="text-lg font-semibold text-red-400 mb-2 flex items-center">
-                    <span className="mr-2">⬇️</span> Reversed Meaning
-                  </h3>
-                  <p className="text-cosmic-100 leading-relaxed">{card.reversed}</p>
-                </div>
+                {card.reversed && (
+                  <div className="bg-cosmic-800/50 rounded-lg p-4 border border-red-500/30">
+                    <h3 className="text-lg font-semibold text-red-400 mb-2 flex items-center">
+                      <span className="mr-2">⬇️</span> Reversed Meaning
+                    </h3>
+                    <p className="text-cosmic-100 leading-relaxed">{card.reversed}</p>
+                  </div>
+                )}
               </div>
 
               {/* Description */}
@@ -135,6 +173,18 @@ const TarotCardModal: React.FC<TarotCardModalProps> = ({ card, isOpen, onClose }
                     <span className="mr-2">📜</span> Description
                   </h3>
                   <p className="text-cosmic-100 leading-relaxed">{card.description}</p>
+                </div>
+              )}
+
+              {/* Debug info - can be toggled on/off as needed */}
+              {false && (
+                <div className="bg-cosmic-800/30 rounded-lg p-3 border border-orange-500/30 text-xs">
+                  <h4 className="text-orange-400 font-semibold mb-1">Debug Info:</h4>
+                  <div className="text-cosmic-200 space-y-1">
+                    <div>Image URL: {card?.image || 'None'}</div>
+                    <div>Image Error: {imageError ? 'Yes' : 'No'}</div>
+                    <div>Loading: {imageLoading ? 'Yes' : 'No'}</div>
+                  </div>
                 </div>
               )}
             </div>
