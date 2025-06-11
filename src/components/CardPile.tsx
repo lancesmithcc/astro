@@ -120,20 +120,18 @@ const CardPile: React.FC<CardPileProps> = ({ onCardsSelected }) => {
 
     setRevealedIndices(prev => new Set([...prev, index]));
     
-    // Animate card selection - bring to front and center
+    // Animate card selection - just flip in place, keep in pile
     gsap.to(`.pile-card-${index}`, {
-      scale: 1.3,
+      scale: 1.1,
       rotation: 0,
-      x: (selectedCards.length - 1) * 100 - 100,
-      y: -150,
       zIndex: 200 + selectedCards.length,
-      duration: 0.8,
-      ease: 'back.out(1.7)'
+      duration: 0.6,
+      ease: 'back.out(1.5)'
     });
 
-    // Fade out other unselected cards slightly
+    // Slightly fade out other unselected cards
     gsap.to('.card-pile-item:not(.selected)', {
-      opacity: 0.4,
+      opacity: 0.6,
       duration: 0.3
     });
 
@@ -248,35 +246,26 @@ const CardPile: React.FC<CardPileProps> = ({ onCardsSelected }) => {
       </div>
 
       {selectedCards.length > 0 && (
-        <div className="mt-12 text-center">
-          <p className="text-cosmic-300 mb-6 text-lg">
-            {selectedCards.length === 3 ? 'Your chosen trinity...' : `${selectedCards.length} of 3 chosen`}
+        <div className="mt-16 text-center">
+          <p className="text-cosmic-300 mb-8 text-xl font-semibold">
+            {selectedCards.length === 3 ? '✨ Your Chosen Trinity ✨' : `${selectedCards.length} of 3 cards chosen`}
           </p>
-          <div className="flex justify-center space-x-6">
+          <div className="flex justify-center space-x-8">
             {selectedCards.map((card, index) => (
-              <div key={index} className="text-center">
-                <div className="w-20 h-32 rounded-lg overflow-hidden mystical-shadow border border-aurora-400/50 relative">
+              <div key={index} className="text-center transform hover:scale-105 transition-transform duration-300">
+                <div className="w-24 h-36 rounded-lg overflow-hidden mystical-shadow border-2 border-aurora-400 relative bg-gradient-to-b from-cosmic-800 to-cosmic-900">
                   {card.image ? (
                     <>
                       <img 
                         src={card.image} 
                         alt={card.name}
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover rounded-lg"
                         onError={handleImageError}
                         crossOrigin="anonymous"
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent 
-                                     flex flex-col justify-end p-1">
-                        <h5 className="text-xs font-bold text-white leading-tight">{card.name}</h5>
-                      </div>
-                      {/* Fallback for selected cards too */}
-                      <div className="w-full h-full bg-gradient-to-b from-cosmic-600 to-aurora-600 p-2 flex flex-col justify-between absolute inset-0"
-                           style={{ display: 'none' }}>
-                        <div className="text-center">
-                          <h5 className="text-xs font-bold text-white mb-1 leading-tight">{card.name}</h5>
-                          <p className="text-xs text-cosmic-100 mb-2">{card.suit}</p>
-                        </div>
-                        <p className="text-xs text-cosmic-200 text-center">{card.keywords[0]}</p>
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent 
+                                     flex flex-col justify-end p-2 rounded-lg">
+                        <h5 className="text-xs font-bold text-white leading-tight shadow-text">{card.name}</h5>
                       </div>
                     </>
                   ) : (
@@ -285,13 +274,18 @@ const CardPile: React.FC<CardPileProps> = ({ onCardsSelected }) => {
                         <h5 className="text-xs font-bold text-white mb-1 leading-tight">{card.name}</h5>
                         <p className="text-xs text-cosmic-100 mb-2">{card.suit}</p>
                       </div>
-                      <p className="text-xs text-cosmic-200 text-center">{card.keywords[0]}</p>
+                      <p className="text-xs text-cosmic-200 text-center">{card.keywords && card.keywords[0]}</p>
                     </div>
                   )}
                 </div>
-                <p className="text-xs text-cosmic-400 mt-2">
-                  {index === 0 ? 'Past' : index === 1 ? 'Present' : 'Future'}
-                </p>
+                <div className="mt-3">
+                  <p className="text-sm font-semibold text-aurora-300 mb-1">
+                    {index === 0 ? '🌙 Past' : index === 1 ? '⭐ Present' : '🔮 Future'}
+                  </p>
+                  <p className="text-xs text-cosmic-400 leading-relaxed max-w-24">
+                    {card.keywords && card.keywords[0]}
+                  </p>
+                </div>
               </div>
             ))}
           </div>

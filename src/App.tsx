@@ -4,7 +4,6 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import ChatInterface from './components/ChatInterface';
 import MandalaBackground from './components/MandalaBackground';
 import AstrologicalBackground from './components/AstrologicalBackground';
-import TarotAPITest from './components/TarotAPITest';
 import { TarotCard } from './types';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -46,11 +45,6 @@ function App() {
       
       {/* Main content - top layer */}
       <div className="min-h-screen relative z-10">
-        {/* Temporary test component */}
-        <div className="p-4">
-          <TarotAPITest />
-        </div>
-        
         <ChatInterface 
           onSignChange={updateAstrologicalSign}
           onCardsChange={updateSelectedCards}

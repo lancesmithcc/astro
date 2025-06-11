@@ -6,7 +6,8 @@ export interface TarotAPICard {
   meaning_up: string;
   meaning_rev: string;
   desc: string;
-  image?: string;
+  value: string;
+  value_int: number;
 }
 
 export interface TarotAPIResponse {
@@ -15,14 +16,14 @@ export interface TarotAPIResponse {
 }
 
 class TarotAPIService {
-  private readonly BASE_URL = 'https://tarotapi.netlify.app/api/v1';
+  private readonly BASE_URL = 'https://tarotapi.dev/api/v1';
   
   /**
    * Fetch a single random tarot card
    */
   async getRandomCard(): Promise<TarotAPICard> {
     try {
-      const response = await fetch(`${this.BASE_URL}/cards/random`);
+      const response = await fetch(`${this.BASE_URL}/cards/random?n=1`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
@@ -43,7 +44,7 @@ class TarotAPIService {
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
-      const data: TarotAPIResponse = await response.json();
+      const data = await response.json();
       return data.cards;
     } catch (error) {
       console.error('Error fetching all cards:', error);
@@ -56,10 +57,12 @@ class TarotAPIService {
    */
   async getRandomCards(count: number = 3): Promise<TarotAPICard[]> {
     try {
-      const cards: TarotAPICard[] = [];
-      const promises = Array(count).fill(null).map(() => this.getRandomCard());
-      const results = await Promise.all(promises);
-      return results;
+      const response = await fetch(`${this.BASE_URL}/cards/random?n=${count}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      return data.cards;
     } catch (error) {
       console.error('Error fetching random cards:', error);
       throw error;
@@ -73,7 +76,7 @@ class TarotAPIService {
     return {
       name: apiCard.name,
       suit: apiCard.suit || apiCard.type,
-      keywords: [apiCard.name_short],
+      keywords: [apiCard.value || apiCard.name_short],
       upright: apiCard.meaning_up,
       reversed: apiCard.meaning_rev,
       element: this.getElementFromSuit(apiCard.suit || apiCard.type),
@@ -102,8 +105,9 @@ class TarotAPIService {
    * Generate image URL for card
    */
   private getCardImageUrl(nameShort: string): string {
-    // The API provides images at a predictable URL pattern
-    return `https://sacred-texts.com/tarot/pkt/img/${nameShort.toLowerCase().replace(/\s+/g, '')}.jpg`;
+    // Use the Rider-Waite 1909 public domain images from sacred-texts.com
+    // Format: name_short from API (like 'ar01', 'wa02', 'cu03', etc.)
+    return `https://www.sacred-texts.com/tarot/pkt/img/${nameShort}.jpg`;
   }
 }
 
