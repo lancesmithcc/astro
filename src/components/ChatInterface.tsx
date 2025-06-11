@@ -457,7 +457,7 @@ Your ${astroData?.moonSign} Moon is asking: When you look at these three cards a
         <div className="flex items-center justify-center space-x-2 mb-2">
           <Star className="w-6 h-6 text-cosmic-400 animate-pulse" />
           <h1 className="text-[55px] font-bold bg-gradient-to-r from-cosmic-800 to-aurora-800 bg-clip-text text-transparent leading-tight">
-            {currentStep === 'clarifying' ? 'Ask Questions About Your Reading' : 'AstrloScan'}
+            {currentStep === 'clarifying' ? 'Ask Questions About Your Reading' : 'AstroloScan'}
           </h1>
           {currentStep === 'clarifying' ? (
             <MessageCircle className="w-6 h-6 text-green-400 animate-pulse" />
