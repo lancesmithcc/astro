@@ -70,19 +70,46 @@ class TarotAPIService {
   }
 
   /**
-   * Convert API card to our internal TarotCard format
+   * Convert API card to our internal TarotCard format.
+   * We derive human-friendly keywords from the upright meaning so the guidance
+   * language never falls back to cryptic numbers like "1 energy".
    */
   convertToTarotCard(apiCard: TarotAPICard): import('../types').TarotCard {
     return {
       name: apiCard.name,
       suit: apiCard.suit || apiCard.type,
-      keywords: [apiCard.value || apiCard.name_short],
+      keywords: this.extractKeywords(apiCard),
       upright: apiCard.meaning_up,
       reversed: apiCard.meaning_rev,
       element: this.getElementFromSuit(apiCard.suit || apiCard.type),
       image: this.getCardImageUrl(apiCard.name_short),
       description: apiCard.desc
     };
+  }
+
+  /**
+   * Build a concise list of descriptive keywords for the card.
+   * 1. Split the upright meaning on commas and grab the first few descriptors.
+   * 2. Fallback to card value/name when no descriptors are found.
+   * 3. Filter out any numeric strings so we never show "1 energy" etc.
+   */
+  private extractKeywords(apiCard: TarotAPICard): string[] {
+    const raw = (apiCard.meaning_up || '').split(',').map(s => s.trim()).filter(Boolean);
+
+    // Filter out purely numeric or roman-numeral values
+    const cleaned = raw.filter(word => !/^[0-9ivxlcdm]+$/i.test(word));
+
+    if (cleaned.length > 0) {
+      // Capitalise first letter for nicer display and limit to 3 keywords.
+      return cleaned.slice(0, 3).map(k => k.charAt(0).toUpperCase() + k.slice(1));
+    }
+
+    // Fallbacks – use card value (e.g., "Ace") or the full name
+    const fallback = apiCard.value && !/^[0-9]+$/.test(apiCard.value)
+      ? apiCard.value
+      : apiCard.name;
+
+    return [fallback];
   }
 
   /**

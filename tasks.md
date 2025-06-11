@@ -69,4 +69,16 @@ The tarot card system now displays actual card images fetched from the API, with
   - Responsive design for mobile and desktop
   - Fixed background attachment for immersive experience
   - Proper fallbacks and mobile optimization
-  - Beautiful animated starfield with twinkling stars 
+  - Beautiful animated starfield with twinkling stars
+
+## Phase 7: Language & Clarity Improvements
+
+- [x] Replace numeric card energy references (e.g., "1 energy") with human-friendly descriptors
+  - Added `extractKeywords` helper in `src/services/tarotAPI.ts` to pull descriptive keywords from each card's upright meaning.
+  - Filters out purely numeric or Roman-numeral strings so guidance now says things like "Creativity energy" instead of "1 energy".
+- [x] Ensure guidance wording remains accessible and avoids overly technical astrology jargon.
+  - Existing wording is already conversational; numeric fix removes the most confusing phrasing.
+
+### Status
+
+✅ **COMPLETED** – Card energy language now uses recognizable descriptive terms. 
