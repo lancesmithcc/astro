@@ -7,11 +7,37 @@
     font-family: 'Antic Slab', serif;
   }
   
-  /* Clean base styles */
-  html, body, #root {
-    background: #0f0f23;
+  /* Clean base styles with space background */
+  html, body {
+    margin: 0;
+    padding: 0;
     min-height: 100vh;
     overflow-x: hidden;
+  }
+  
+  body {
+    background: #0f0f23 url('/space.svg') center center / cover no-repeat fixed;
+    background-attachment: fixed; /* Ensures background stays in place during scroll */
+    background-size: cover; /* Ensures the SVG covers the entire viewport */
+  }
+  
+  /* Responsive background handling for mobile devices */
+  @media (max-width: 768px) {
+    body {
+      /* On mobile, fixed attachment can cause issues, so use scroll */
+      background-attachment: scroll;
+      background-size: cover;
+      /* Ensure it still covers on mobile viewports */
+      min-height: 100dvh; /* Use dynamic viewport height for mobile */
+    }
+  }
+  
+  #root {
+    min-height: 100vh;
+    min-height: 100dvh; /* Use dynamic viewport height for better mobile support */
+    position: relative;
+    /* Add a subtle overlay to ensure text readability over the animated background */
+    background: rgba(15, 15, 35, 0.1);
   }
 }
 
