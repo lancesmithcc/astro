@@ -94,4 +94,7 @@ The tarot card system now displays actual card images fetched from the API, with
 ### Divine Channel
 - [x] Implemented computeDivineChannel utility and integrated it into ChatInterface to establish a session-wide energetic link.
 
+### Brainwave-Mapped LFO
+- [x] LFO frequency now dynamically maps intensity → Delta/Theta/Alpha/Beta/Gamma bands (2–40 Hz) in AstrologicalBackground.
+
 - [ ] Monitor user feedback on readability and make further tweaks. 

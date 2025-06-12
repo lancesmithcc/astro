@@ -82,10 +82,21 @@ const AstrologicalBackground: React.FC<AstrologicalBackgroundProps> = ({
       mainGain.gain.setValueAtTime(0, audioContext.currentTime);
       mainGain.gain.linearRampToValueAtTime(0.05, audioContext.currentTime + 2); // AUDIBLE base volume
 
-      // Create LFO (Low Frequency Oscillator) for 4Hz modulation
+      // Create LFO (Low Frequency Oscillator) with frequency linked to intensity/brainwave band
       const lfoOscillator = audioContext.createOscillator();
       lfoOscillator.type = 'sine';
-      lfoOscillator.frequency.setValueAtTime(4, audioContext.currentTime); // 4Hz oscillation
+
+      const computeLfoFreq = (level: number): number => {
+        if (level < 0.2) return 2;        // Delta
+        if (level < 0.4) return 6;        // Theta
+        if (level < 0.6) return 10;       // Alpha
+        if (level < 0.8) return 20;       // Beta
+        return 40;                        // Gamma (moderate audible range but still below carrier)
+      };
+
+      const initialLfoFreq = computeLfoFreq(intensity);
+      lfoOscillator.frequency.setValueAtTime(initialLfoFreq, audioContext.currentTime);
+      console.log('🎵 LFO set to', initialLfoFreq, 'Hz based on intensity', intensity);
 
       // Create LFO gain node to control modulation depth - AUDIBLE MODULATION
       const lfoGain = audioContext.createGain();
@@ -194,6 +205,22 @@ const AstrologicalBackground: React.FC<AstrologicalBackgroundProps> = ({
       console.log('🎵 Frequency transitioning to:', currentEnergy.frequency, 'Hz with AUDIBLE 4Hz oscillation');
     }
   }, [currentSign]);
+
+  // Update LFO rate when intensity changes
+  useEffect(() => {
+    if (lfoOscillatorRef.current && audioContextRef.current) {
+      const newFreq = intensity < 0.2 ? 2
+        : intensity < 0.4 ? 6
+        : intensity < 0.6 ? 10
+        : intensity < 0.8 ? 20
+        : 40;
+      lfoOscillatorRef.current.frequency.linearRampToValueAtTime(
+        newFreq,
+        audioContextRef.current.currentTime + 2
+      );
+      console.log('🎵 LFO frequency transitioning to', newFreq, 'Hz based on intensity', intensity);
+    }
+  }, [intensity]);
 
   // Enhanced fade-out effect with AUDIBLE levels
   useEffect(() => {
