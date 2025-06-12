@@ -274,6 +274,19 @@ What part of your reading felt most true to you? That's usually where the real g
   const handleSendMessage = () => {
     if (!currentInput.trim()) return;
 
+    // Detect obviously silly or inappropriate input and respond immediately
+    const isSillyInput = (text: string): boolean => {
+      const lower = text.toLowerCase();
+      const sillyWords = ['poop', 'butt', 'fart', 'lmao', 'lol', 'xd', 'rofl'];
+      return sillyWords.some(w => lower.includes(w));
+    };
+
+    if (isSillyInput(currentInput)) {
+      addMysticMessage("You silly goose – let's take this a bit more seriously, please.", 'mystic');
+      setCurrentInput('');
+      return; // Skip regular processing for this input
+    }
+
     // ENHANCED ANALYSIS of user input IMMEDIATELY with background activation
     const inputMetrics = analyzeResponseDepth(currentInput);
     const inputEnergy = analyzeTextEnergy(currentInput);
