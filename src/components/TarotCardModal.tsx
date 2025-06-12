@@ -48,10 +48,10 @@ const TarotCardModal: React.FC<TarotCardModalProps> = ({ card, isOpen, onClose }
   };
 
   return (
-    <div className="fixed inset-0 z-[999] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[999] flex items-center justify-center p-4 rounded-full bg-transparent">
       {/* Backdrop */}
       <div 
-        className="absolute inset-0 bg-[#111111]"
+        className="absolute inset-0 bg-transparent"
         onClick={onClose}
       ></div>
       
