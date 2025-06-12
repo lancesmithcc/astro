@@ -78,6 +78,38 @@ export const generateEnhancedInsight = (
   // Start with their actual situation
   let insight = '';
   
+  // 1) Technical energies in concise point-form first
+  insight += `**Technical Energies**\n\n`;
+  
+  // Astrology snapshot (if we have birth data analysed)
+  if (astroData) {
+    insight += `• Sun: ${astroData.sunSign}\n`;
+    insight += `• Moon: ${astroData.moonSign}\n`;
+    insight += `• Rising: ${astroData.risingSign}\n`;
+    if (astroData.currentTransits && astroData.currentTransits.length) {
+      insight += `• Current Transit: ${astroData.currentTransits[0]}\n`;
+    }
+  }
+  
+  // Tarot card energies – succinct keywords
+  if (cards && cards.length === 3) {
+    insight += `• Past: ${cards[0].name} (${cards[0].keywords?.[0] || ''})\n`;
+    insight += `• Present: ${cards[1].name} (${cards[1].keywords?.[0] || ''})\n`;
+    insight += `• Guidance: ${cards[2].name} (${cards[2].keywords?.[0] || ''})\n`;
+  } else if (cards && cards.length) {
+    cards.forEach((c, idx) => {
+      insight += `• Card ${idx + 1}: ${c.name} (${c.keywords?.[0] || ''})\n`;
+    });
+  }
+  
+  // Energetic signature depth if available
+  if (analysis) {
+    insight += `• Consciousness: ${Math.round(analysis.psychologicalProfile.consciousnessLevel * 100)}%\n`;
+    insight += `• Synchronicity: ${Math.round(analysis.synchronicityLevel * 100)}%\n`;
+  }
+  
+  insight += `\n`; // Spacer before interpretation
+  
   if (situation.type && situation.details) {
     insight += `**About your ${situation.type} situation:**\n\n`;
     insight += generateNaturalSituationResponse(situation, cards, analysis);

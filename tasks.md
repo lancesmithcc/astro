@@ -85,4 +85,10 @@ The tarot card system now displays actual card images fetched from the API, with
 
 ### Reliability of Tarot Card Images
 - [x] Switch to a reliable, cached image proxy (`images.weserv.nl`) for all card images to prevent broken loads.
-- [ ] Monitor app in production for any residual missing‐image reports and introduce further fallbacks if needed. 
+- [ ] Monitor app in production for any residual missing‐image reports and introduce further fallbacks if needed.
+
+### Response Formatting
+- [x] Prepend each generated insight with concise bullet-point **Technical Energies** (astro snapshot, card energies, metrics) followed by interpretation & real-life applications.
+- [ ] Review other response types (follow-up, clarifying) to adopt the same structure if needed.
+
+- [ ] Monitor user feedback on readability and make further tweaks. 
