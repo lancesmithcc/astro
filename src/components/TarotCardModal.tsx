@@ -56,7 +56,7 @@ const TarotCardModal: React.FC<TarotCardModalProps> = ({ card, isOpen, onClose }
       ></div>
       
       {/* Modal Content */}
-      <div className="relative rounded-full shadow-2xl w-full max-w-6xl border border-gray-800 flex flex-col md:flex-row h-auto max-h-[90vh] md:max-h-[80vh]">
+      <div className="relative rounded-full shadow-2xl w-full max-w-6xl border border-gray-800 flex flex-col md:flex-row h-auto max-h-[90vh] md:max-h-[80vh bg-transparent">
         {/* Close Button - positioned absolutely within the modal content area */}
         <div className="absolute top-2 right-2 z-10">
           <button
