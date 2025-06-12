@@ -132,9 +132,10 @@ class TarotAPIService {
    * Generate image URL for card
    */
   private getCardImageUrl(nameShort: string): string {
-    // Use the Rider-Waite 1909 public domain images from sacred-texts.com
-    // Format: name_short from API (like 'ar01', 'wa02', 'cu03', etc.)
-    return `https://www.sacred-texts.com/tarot/pkt/img/${nameShort}.jpg`;
+    // Use an image proxy (images.weserv.nl) to reliably fetch Rider–Waite public-domain images
+    // The proxy caches remote assets and sidesteps occasional CORS / connectivity issues to sacred-texts.com
+    const rawUrl = `ssl:www.sacred-texts.com/tarot/pkt/img/${nameShort}.jpg`;
+    return `https://images.weserv.nl/?url=${rawUrl}`;
   }
 }
 
@@ -147,5 +148,6 @@ export const tarotAPI = new TarotAPIService();
  * @returns The full URL to the card's image.
  */
 export const getCardImageUrl = (nameShort: string): string => {
-  return `https://www.sacred-texts.com/tarot/pkt/img/${nameShort}.jpg`;
+  const rawUrl = `ssl:www.sacred-texts.com/tarot/pkt/img/${nameShort}.jpg`;
+  return `https://images.weserv.nl/?url=${rawUrl}`;
 }; 

@@ -81,4 +81,8 @@ The tarot card system now displays actual card images fetched from the API, with
 
 ### Status
 
-✅ **COMPLETED** – Card energy language now uses recognizable descriptive terms. 
+✅ **COMPLETED** – Card energy language now uses recognizable descriptive terms.
+
+### Reliability of Tarot Card Images
+- [x] Switch to a reliable, cached image proxy (`images.weserv.nl`) for all card images to prevent broken loads.
+- [ ] Monitor app in production for any residual missing‐image reports and introduce further fallbacks if needed. 
