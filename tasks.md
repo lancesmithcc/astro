@@ -91,4 +91,7 @@ The tarot card system now displays actual card images fetched from the API, with
 - [x] Prepend each generated insight with concise bullet-point **Technical Energies** (astro snapshot, card energies, metrics) followed by interpretation & real-life applications.
 - [ ] Review other response types (follow-up, clarifying) to adopt the same structure if needed.
 
+### Divine Channel
+- [x] Implemented computeDivineChannel utility and integrated it into ChatInterface to establish a session-wide energetic link.
+
 - [ ] Monitor user feedback on readability and make further tweaks. 

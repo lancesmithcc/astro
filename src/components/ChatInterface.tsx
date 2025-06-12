@@ -5,6 +5,7 @@ import { TypeAnimation } from 'react-type-animation';
 import CardPile from './CardPile';
 import BirthdateInput, { BirthData } from './BirthdateInput';
 import { generateEnhancedInitialQuestion, generateEnhancedFollowUpQuestion, generateEnhancedInsight, analyzeResponseDepth, generateEnergyUpdate } from '../utils/enhancedDeepseekEngine';
+import { computeDivineChannel, DivineChannel } from '../utils/divineChannel';
 import { calculateEvolutionaryAstrology, generateAstrologyInsight, AstrologyData } from '../utils/evolutionaryAstrology';
 import { performDeepAnalysis, DeepAnalysis } from '../utils/deepAnalysisEngine';
 import { analyzeTextEnergy, analyzeCumulativeEnergy } from '../utils/textEnergyAnalyzer';
@@ -50,6 +51,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({ onSignChange, onCardsChan
   const [finalReading, setFinalReading] = useState<string>(''); // Store the final reading for reference
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  // Establish a persistent "divine channel" for this session
+  const divineChannelRef = useRef<DivineChannel | null>(null);
+  if (!divineChannelRef.current) {
+    divineChannelRef.current = computeDivineChannel();
+    console.log('🔮 Divine channel established:', divineChannelRef.current);
+  }
 
   // NEW: Optimize GSAP ticker FPS to reduce CPU/GPU load without removing animations
   useEffect(() => {
