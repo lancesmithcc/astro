@@ -36,6 +36,14 @@ const ASTROLOGICAL_ENERGIES = {
   'Pluto': { color: '#0E4A4A', frequency: 98.00, note: 'G2' } // Dark cyan like Scorpio
 };
 
+const mapIntensityToLfoFreq = (level: number): number => {
+  if (level < 0.2) return 2;        // Delta
+  if (level < 0.4) return 6;        // Theta
+  if (level < 0.6) return 10;       // Alpha
+  if (level < 0.8) return 20;       // Beta
+  return 40;                        // Gamma
+};
+
 const AstrologicalBackground: React.FC<AstrologicalBackgroundProps> = ({ 
   currentSign = 'Sagittarius', 
   intensity = 0.3,
@@ -86,15 +94,7 @@ const AstrologicalBackground: React.FC<AstrologicalBackgroundProps> = ({
       const lfoOscillator = audioContext.createOscillator();
       lfoOscillator.type = 'sine';
 
-      const computeLfoFreq = (level: number): number => {
-        if (level < 0.2) return 2;        // Delta
-        if (level < 0.4) return 6;        // Theta
-        if (level < 0.6) return 10;       // Alpha
-        if (level < 0.8) return 20;       // Beta
-        return 40;                        // Gamma (moderate audible range but still below carrier)
-      };
-
-      const initialLfoFreq = computeLfoFreq(intensity);
+      const initialLfoFreq = mapIntensityToLfoFreq(intensity);
       lfoOscillator.frequency.setValueAtTime(initialLfoFreq, audioContext.currentTime);
       console.log('🎵 LFO set to', initialLfoFreq, 'Hz based on intensity', intensity);
 
@@ -209,11 +209,7 @@ const AstrologicalBackground: React.FC<AstrologicalBackgroundProps> = ({
   // Update LFO rate when intensity changes
   useEffect(() => {
     if (lfoOscillatorRef.current && audioContextRef.current) {
-      const newFreq = intensity < 0.2 ? 2
-        : intensity < 0.4 ? 6
-        : intensity < 0.6 ? 10
-        : intensity < 0.8 ? 20
-        : 40;
+      const newFreq = mapIntensityToLfoFreq(intensity);
       lfoOscillatorRef.current.frequency.linearRampToValueAtTime(
         newFreq,
         audioContextRef.current.currentTime + 2
@@ -362,6 +358,10 @@ const AstrologicalBackground: React.FC<AstrologicalBackgroundProps> = ({
     return colorMap[darkColor] || '#4444FF';
   };
 
+  // Pre-compute current LFO display values
+  const lfoDisplayFreq = mapIntensityToLfoFreq(intensity);
+  const lfoBand = getBrainwaveLabel(lfoDisplayFreq);
+
   return (
     <>
       {/* Main astrological background - DARK MODE ENERGY COLORS */}
@@ -397,10 +397,10 @@ const AstrologicalBackground: React.FC<AstrologicalBackgroundProps> = ({
             }}
           >
             <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-            {/* 4Hz oscillation indicator */}
+            {/* Brainwave-band oscillation indicator */}
             {isAudioEnabled && (
               <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse border border-white/50" 
-                   title="4Hz Audio Oscillation Active" />
+                   title={`${lfoDisplayFreq}Hz ${lfoBand} Oscillation Active`} />
             )}
           </div>
           <div>
@@ -411,7 +411,7 @@ const AstrologicalBackground: React.FC<AstrologicalBackgroundProps> = ({
         <div className="mt-2 text-xs text-cosmic-400">
           {currentEnergy.frequency.toFixed(1)} Hz • {currentEnergy.note}
           {isAudioEnabled && (
-            <div className="text-green-400 mt-1">4Hz oscillation AUDIBLE</div>
+            <div className="text-green-400 mt-1">{`${lfoDisplayFreq}Hz ${lfoBand} oscillation AUDIBLE`}</div>
           )}
         </div>
       </div>
@@ -419,11 +419,20 @@ const AstrologicalBackground: React.FC<AstrologicalBackgroundProps> = ({
       {/* Enhanced audio activation hint */}
       {!isAudioEnabled && (
         <div className="fixed bottom-4 right-4 z-50 text-xs text-cosmic-400 opacity-60 bg-black/20 rounded px-2 py-1">
-          Click for AUDIBLE 4Hz frequency oscillation
+          {`Click to enable AUDIBLE ${lfoDisplayFreq}Hz ${lfoBand} oscillation`}
         </div>
       )}
     </>
   );
+};
+
+const getBrainwaveLabel = (freq: number): string => {
+  if (freq === 2) return 'Delta';
+  if (freq === 6) return 'Theta';
+  if (freq === 10) return 'Alpha';
+  if (freq === 20) return 'Beta';
+  if (freq === 40) return 'Gamma';
+  return '';
 };
 
 export default AstrologicalBackground;
