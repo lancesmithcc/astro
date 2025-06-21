@@ -38,46 +38,59 @@ export const generateEnhancedFollowUpQuestion = async (
     - Key psychological theme: The user has a consciousness level of ${Math.round(analysis.psychologicalProfile.consciousnessLevel * 100)}% and is working on their ${analysis.evolutionaryStage.currentLevel}.
 
     Your Task:
-    Based on the reading you provided, formulate one insightful question that encourages the user to look within. The question should be directly related to the themes and advice in the reading. Do not ask a "yes/no" question. Make it personal and thought-provoking.
+    Based on the reading you provided, formulate one insightful question that encourages the user to look within. The question must be directly related to the specific advice and themes in the reading as it applies to their situation. Do not ask a generic question. Make it personal and thought-provoking. For example, instead of "How does that resonate?", ask "Given the advice about trusting your intuition, what's one small step you could take this week at your job that feels more aligned with that inner knowing?"
   `;
 
   console.log("🔮 Sending this follow-up prompt to DeepSeek:", prompt);
 
-  try {
-    const response = await fetch("https://api.deepseek.com/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.DEEPSEEK_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: "deepseek-chat",
-        messages: [{ role: "user", content: prompt }],
-        max_tokens: 100,
-        temperature: 0.8,
-      })
-    });
+  const maxRetries = 3;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await fetch("https://api.deepseek.com/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${process.env.DEEPSEEK_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: "deepseek-chat",
+          messages: [{ role: "user", content: `${prompt} (Attempt ${attempt + 1})` }],
+          max_tokens: 100,
+          temperature: 0.8,
+        })
+      });
 
-    if (!response.ok) {
-      console.error('DeepSeek API error for follow-up:', response.status, response.statusText);
-      return "What part of this reading resonates with you the most?"; // Fallback
+      if (!response.ok) {
+        console.error(`DeepSeek API error for follow-up on attempt ${attempt + 1}:`, response.status, response.statusText);
+        throw new Error('API request failed');
+      }
+
+      const data = await response.json();
+      console.log(`✅ Received follow-up response from DeepSeek on attempt ${attempt + 1}:`, data);
+
+      if (!data.choices || data.choices.length === 0 || !data.choices[0].message.content) {
+        console.error(`❌ DeepSeek follow-up response is missing expected content on attempt ${attempt + 1}.`, data);
+        throw new Error('Invalid API response');
+      }
+
+      // Clean up the response to ensure it's just the question
+      let question = data.choices[0].message.content.trim();
+      // Remove potential quotation marks
+      if (question.startsWith('"') && question.endsWith('"')) {
+        question = question.substring(1, question.length - 1);
+      }
+      return question;
+
+    } catch (error) {
+      console.error(`Error on attempt ${attempt + 1} calling DeepSeek API for follow-up:`, error);
+      if (attempt < maxRetries - 1) {
+        await new Promise(res => setTimeout(res, 1000));
+      }
     }
-
-    const data = await response.json();
-    console.log("✅ Received follow-up response from DeepSeek:", data);
-    
-    // Clean up the response to ensure it's just the question
-    let question = data.choices[0].message.content.trim();
-    // Remove potential quotation marks
-    if (question.startsWith('"') && question.endsWith('"')) {
-      question = question.substring(1, question.length - 1);
-    }
-    return question;
-
-  } catch (error) {
-    console.error('Error calling DeepSeek API for follow-up:', error);
-    return "How does this reading land with you?"; // Fallback
   }
+
+  console.error("❌ All DeepSeek follow-up retries failed.");
+  return "How does this reading land with you?";
 };
 
 export const generateEnhancedInsight = async (
@@ -116,58 +129,65 @@ export const generateEnhancedInsight = async (
     Structure your response into these three sections exactly:
 
     **What your cards are saying:**
-    Interpret the three cards in the context of the user's situation. Explain how the past foundation, present challenge, and future guidance cards tell a story about their current life circumstances.
+    Interpret the three cards in the context of the user's specific situation about their ${situation.type}. ALWAYS tie the interpretation of each card back to their problem. For example, instead of saying 'The Tower means upheaval,' say 'For your situation at work, The Tower suggests an unexpected shake-up is coming.'
 
     **What this means for you:**
-    Connect the card reading and astrological data directly to their life. Provide personal, actionable guidance. How can they apply this wisdom? What does this mean for their relationships, work, or personal growth?
+    Make this section extremely personal. Use the user's own words and feelings (e.g., "${situation.keyPhrase}"). Connect the astrological data not as a general fact, but as a direct influence on what they are currently experiencing.
 
     **Moving forward:**
-    Give them 2-3 clear, practical, and empowering next steps. What is the most important thing for them to focus on right now?
+    Give them 2-3 clear, practical, and empowering next steps that are concrete actions they can take to address their specific situation. Avoid generic advice.
 
     Speak naturally, like you are talking to a friend. Be encouraging and focus on their inner power and potential.
   `;
 
   console.log("🔮 Sending this prompt to DeepSeek:", prompt);
 
-  try {
-    const response = await fetch("https://api.deepseek.com/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${process.env.DEEPSEEK_API_KEY}`
-      },
-      body: JSON.stringify({
-        model: "deepseek-chat",
-        messages: [
-          {
-            content: prompt,
-            role: "user"
-          }
-        ],
-      })
-    });
+  const maxRetries = 3;
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await fetch("https://api.deepseek.com/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${process.env.DEEPSEEK_API_KEY}`
+        },
+        body: JSON.stringify({
+          model: "deepseek-chat",
+          messages: [
+            {
+              content: `${prompt} (Attempt ${attempt + 1})`,
+              role: "user"
+            }
+          ],
+        })
+      });
 
-    if (!response.ok) {
-      console.error('DeepSeek API error:', response.status, response.statusText);
-      const errorBody = await response.text();
-      console.error('Error Body:', errorBody);
-      return "I'm having a little trouble connecting with the cosmic energies right now. Please try again in a moment.";
+      if (!response.ok) {
+        const errorBody = await response.text();
+        console.error(`DeepSeek API error on attempt ${attempt + 1}:`, response.status, response.statusText, errorBody);
+        throw new Error('API request failed'); // Trigger retry
+      }
+
+      const data = await response.json();
+      console.log(`✅ Received response from DeepSeek on attempt ${attempt + 1}:`, data);
+
+      if (!data.choices || data.choices.length === 0 || !data.choices[0].message.content) {
+        console.error(`❌ DeepSeek response is missing expected content on attempt ${attempt + 1}.`, data);
+        throw new Error('Invalid API response'); // Trigger retry
+      }
+
+      return data.choices[0].message.content; // Success!
+
+    } catch (error) {
+      console.error(`Error on attempt ${attempt + 1} calling DeepSeek API:`, error);
+      if (attempt < maxRetries - 1) {
+        await new Promise(res => setTimeout(res, 1000)); // Wait 1s before next retry
+      }
     }
-
-    const data = await response.json();
-    console.log("✅ Received response from DeepSeek:", data);
-    
-    if (!data.choices || data.choices.length === 0 || !data.choices[0].message.content) {
-      console.error("❌ DeepSeek response is missing expected content.", data);
-      return "The cosmic energies are a bit hazy at the moment. I can't seem to form a clear picture. Please try again later.";
-    }
-
-    return data.choices[0].message.content;
-
-  } catch (error) {
-    console.error('Error calling DeepSeek API:', error);
-    return "It seems there was an issue reaching the divine channels. Let's try again shortly.";
   }
+
+  console.error("❌ All DeepSeek retries failed.");
+  return "It seems there was an issue reaching the divine channels. Let's try again shortly.";
 };
 
 // Extract what they actually said in natural language
