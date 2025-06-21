@@ -278,7 +278,7 @@ The situation you're dealing with is actually perfect for developing this self-t
 What part of your reading felt most true to you? That's usually where the real guidance is.`;
   };
 
-  const handleSendMessage = () => {
+  const handleSendMessage = async () => {
     if (!currentInput.trim()) return;
 
     // Detect obviously silly or inappropriate input and respond immediately
@@ -343,7 +343,7 @@ Time to let three cards choose you. Your ${astroData?.moonSign} Moon knows exact
     } else if (currentStep === 'deeper') {
       // Generate enhanced deeper insight with SITUATIONAL analysis
       if (deepAnalysis) {
-        const followUp = generateEnhancedFollowUpQuestion(selectedCards, userResponses, deepAnalysis);
+        const followUp = await generateEnhancedFollowUpQuestion(selectedCards, userResponses, deepAnalysis, finalReading);
         const astroContext = astroData ? `Your ${astroData.northNode.split(' - ')[0]} North Node is asking: ${followUp}` : followUp;
         addMysticMessage(astroContext, 'deep-analysis', astroData || undefined, deepAnalysis || undefined);
       }

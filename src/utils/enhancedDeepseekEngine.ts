@@ -17,49 +17,67 @@ export const generateEnhancedInitialQuestion = (): string => {
   return questions[Math.floor(Math.random() * questions.length)];
 };
 
-export const generateEnhancedFollowUpQuestion = (
+export const generateEnhancedFollowUpQuestion = async (
   cards: TarotCard[], 
   responses: string[],
-  analysis: DeepAnalysis
-): string => {
-  // Extract what they actually said
-  const situation = extractActualSituation(responses);
-  const mainCard = cards[1]; // Present moment card
-  
-  console.log('🎯 GENERATING NATURAL FOLLOW-UP:', situation);
-  
-  // Generate natural follow-up based on what they actually shared
-  if (situation.type === 'relationship') {
-    return `So with this relationship thing you mentioned - when you look at the ${mainCard.name}, what comes up for you? This card often shows up when we need to trust our gut about someone.`;
+  analysis: DeepAnalysis,
+  finalReadingText: string
+): Promise<string> => {
+
+  const prompt = `
+    You are a wise, modern, and compassionate spiritual guide. You have just provided a user with the tarot and astrology reading below. Now, you need to ask them a single, powerful, open-ended follow-up question to help them reflect more deeply.
+
+    **The Reading You Provided:**
+    ---
+    ${finalReadingText}
+    ---
+
+    **Original Context (for your reference):**
+    - User's situation: ${responses.join(' ')}
+    - Cards drawn: ${cards.map(c => c.name).join(', ')}
+    - Key psychological theme: The user has a consciousness level of ${Math.round(analysis.psychologicalProfile.consciousnessLevel * 100)}% and is working on their ${analysis.evolutionaryStage.currentLevel}.
+
+    Your Task:
+    Based on the reading you provided, formulate one insightful question that encourages the user to look within. The question should be directly related to the themes and advice in the reading. Do not ask a "yes/no" question. Make it personal and thought-provoking.
+  `;
+
+  console.log("🔮 Sending this follow-up prompt to DeepSeek:", prompt);
+
+  try {
+    const response = await fetch("https://api.deepseek.com/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.DEEPSEEK_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "deepseek-chat",
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 100,
+        temperature: 0.8,
+      })
+    });
+
+    if (!response.ok) {
+      console.error('DeepSeek API error for follow-up:', response.status, response.statusText);
+      return "What part of this reading resonates with you the most?"; // Fallback
+    }
+
+    const data = await response.json();
+    console.log("✅ Received follow-up response from DeepSeek:", data);
+    
+    // Clean up the response to ensure it's just the question
+    let question = data.choices[0].message.content.trim();
+    // Remove potential quotation marks
+    if (question.startsWith('"') && question.endsWith('"')) {
+      question = question.substring(1, question.length - 1);
+    }
+    return question;
+
+  } catch (error) {
+    console.error('Error calling DeepSeek API for follow-up:', error);
+    return "How does this reading land with you?"; // Fallback
   }
-  
-  if (situation.type === 'work') {
-    return `About the work situation - the ${mainCard.name} is interesting here. What would it look like if you approached this from a place of complete self-trust instead of trying to please everyone?`;
-  }
-  
-  if (situation.type === 'decision') {
-    return `For this decision you're facing, the ${mainCard.name} is asking: what would you choose if you knew you couldn't make a wrong choice? What feels most true to who you are?`;
-  }
-  
-  if (situation.type === 'family') {
-    return `With your family situation, the ${mainCard.name} often appears when we need to set boundaries while staying loving. What would that look like for you?`;
-  }
-  
-  if (situation.type === 'change') {
-    return `About the changes happening - the ${mainCard.name} suggests this transition is actually preparing you for something better. What part of you is excited about what's coming?`;
-  }
-  
-  if (situation.type === 'fear') {
-    return `What you're scared about - the ${mainCard.name} often shows up to remind us that fear and excitement feel the same in the body. What if this fear is actually anticipation?`;
-  }
-  
-  // Use their actual words if we have them
-  if (situation.keyPhrase) {
-    return `You said "${situation.keyPhrase}" - the ${mainCard.name} is asking: what would change if you completely trusted yourself in this situation?`;
-  }
-  
-  // Natural default
-  return `Looking at the ${mainCard.name} and what you shared - what's your gut telling you about this situation? What feels most true?`;
 };
 
 export const generateEnhancedInsight = async (
@@ -92,7 +110,10 @@ export const generateEnhancedInsight = async (
     - Present/Challenge: ${cards[1].name} (Keywords: ${cards[1].keywords.join(', ')})
     - Future/Guidance: ${cards[2].name} (Keywords: ${cards[2].keywords.join(', ')})
 
-    Please synthesize all of this information into a cohesive and flowing reading. Structure your response into three sections with these exact titles:
+    Your Task:
+    Synthesize all of this information into a cohesive and flowing reading. Your tone should be wise and encouraging, like a modern spiritual guide talking to a friend. Do NOT just list the data. Instead, weave the card meanings, astrological context, and user's situation into a seamless narrative. The final output must be easy to understand and focused on practical, real-world advice.
+
+    Structure your response into these three sections exactly:
 
     **What your cards are saying:**
     Interpret the three cards in the context of the user's situation. Explain how the past foundation, present challenge, and future guidance cards tell a story about their current life circumstances.
