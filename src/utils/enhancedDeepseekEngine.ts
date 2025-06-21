@@ -62,75 +62,82 @@ export const generateEnhancedFollowUpQuestion = (
   return `Looking at the ${mainCard.name} and what you shared - what's your gut telling you about this situation? What feels most true?`;
 };
 
-export const generateEnhancedInsight = (
+export const generateEnhancedInsight = async (
   cards: TarotCard[], 
   responses: string[],
   birthData: BirthData | null,
   astroData: AstrologyData | null
-): string => {
+): Promise<string> => {
   
-  // Get their actual situation
   const situation = extractActualSituation(responses);
   const analysis = performDeepAnalysis(responses, birthData, astroData, cards);
-  
-  console.log('🔍 GENERATING NATURAL INSIGHT FOR:', situation);
-  
-  // Start with their actual situation
-  let insight = '';
-  
-  // 1) Technical energies in concise point-form first
-  insight += `**Technical Energies**\n\n`;
-  
-  // Astrology snapshot (if we have birth data analysed)
-  if (astroData) {
-    insight += `• Sun: ${astroData.sunSign}\n`;
-    insight += `• Moon: ${astroData.moonSign}\n`;
-    insight += `• Rising: ${astroData.risingSign}\n`;
-    if (astroData.currentTransits && astroData.currentTransits.length) {
-      insight += `• Current Transit: ${astroData.currentTransits[0]}\n`;
-    }
-  }
-  
-  // Tarot card energies – succinct keywords
-  if (cards && cards.length === 3) {
-    insight += `• Past: ${cards[0].name} (${cards[0].keywords?.[0] || ''})\n`;
-    insight += `• Present: ${cards[1].name} (${cards[1].keywords?.[0] || ''})\n`;
-    insight += `• Guidance: ${cards[2].name} (${cards[2].keywords?.[0] || ''})\n`;
-  } else if (cards && cards.length) {
-    cards.forEach((c, idx) => {
-      insight += `• Card ${idx + 1}: ${c.name} (${c.keywords?.[0] || ''})\n`;
+
+  const prompt = `
+    You are a wise, modern, and compassionate spiritual guide. Your goal is to provide a tarot and astrology reading that is insightful, empowering, and easy to understand. Avoid overly technical jargon. Focus on practical, real-life application.
+
+    Here is the user's situation based on their own words:
+    - Initial concern: ${responses[0]}
+    - Their follow-up thoughts: "${situation.keyPhrase}"
+    - The core topic seems to be: ${situation.type}
+    - Their emotional state appears to be: ${situation.emotion}
+
+    Here is the energetic and astrological context for this person:
+    - Sun Sign: ${astroData?.sunSign}, Moon Sign: ${astroData?.moonSign}, Rising Sign: ${astroData?.risingSign}
+    - Evolutionary Theme: ${astroData?.evolutionaryTheme}
+    - Current relevant transit: ${astroData?.currentTransits[0]}
+    - Deep analysis shows a consciousness level of ${Math.round(analysis.psychologicalProfile.consciousnessLevel * 100)}% and synchronicity level of ${Math.round(analysis.synchronicityLevel * 100)}%.
+
+    Here are the tarot cards they have drawn:
+    - Past/Foundation: ${cards[0].name} (Keywords: ${cards[0].keywords.join(', ')})
+    - Present/Challenge: ${cards[1].name} (Keywords: ${cards[1].keywords.join(', ')})
+    - Future/Guidance: ${cards[2].name} (Keywords: ${cards[2].keywords.join(', ')})
+
+    Please synthesize all of this information into a cohesive and flowing reading. Structure your response into three sections with these exact titles:
+
+    **What your cards are saying:**
+    Interpret the three cards in the context of the user's situation. Explain how the past foundation, present challenge, and future guidance cards tell a story about their current life circumstances.
+
+    **What this means for you:**
+    Connect the card reading and astrological data directly to their life. Provide personal, actionable guidance. How can they apply this wisdom? What does this mean for their relationships, work, or personal growth?
+
+    **Moving forward:**
+    Give them 2-3 clear, practical, and empowering next steps. What is the most important thing for them to focus on right now?
+
+    Speak naturally, like you are talking to a friend. Be encouraging and focus on their inner power and potential.
+  `;
+
+  try {
+    const response = await fetch("https://api.deepseek.com/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${process.env.DEEPSEEK_API_KEY}`
+      },
+      body: JSON.stringify({
+        model: "deepseek-chat",
+        messages: [
+          {
+            content: prompt,
+            role: "user"
+          }
+        ],
+      })
     });
+
+    if (!response.ok) {
+      console.error('DeepSeek API error:', response.status, response.statusText);
+      const errorBody = await response.text();
+      console.error('Error Body:', errorBody);
+      return "I'm having a little trouble connecting with the cosmic energies right now. Please try again in a moment.";
+    }
+
+    const data = await response.json();
+    return data.choices[0].message.content;
+
+  } catch (error) {
+    console.error('Error calling DeepSeek API:', error);
+    return "It seems there was an issue reaching the divine channels. Let's try again shortly.";
   }
-  
-  // Energetic signature depth if available
-  if (analysis) {
-    insight += `• Consciousness: ${Math.round(analysis.psychologicalProfile.consciousnessLevel * 100)}%\n`;
-    insight += `• Synchronicity: ${Math.round(analysis.synchronicityLevel * 100)}%\n`;
-  }
-  
-  insight += `\n`; // Spacer before interpretation
-  
-  if (situation.type && situation.details) {
-    insight += `**About your ${situation.type} situation:**\n\n`;
-    insight += generateNaturalSituationResponse(situation, cards, analysis);
-    insight += `\n\n`;
-  }
-  
-  // Natural card interpretations
-  insight += `**What your cards are saying:**\n\n`;
-  insight += generateNaturalCardReadings(cards, situation);
-  insight += `\n\n`;
-  
-  // Personal guidance
-  insight += `**What this means for you:**\n\n`;
-  insight += generatePersonalGuidance(situation, cards, analysis, astroData);
-  insight += `\n\n`;
-  
-  // Next steps
-  insight += `**Moving forward:**\n\n`;
-  insight += generateNaturalNextSteps(situation, cards);
-  
-  return insight;
 };
 
 // Extract what they actually said in natural language
@@ -194,129 +201,6 @@ const extractSentencesContaining = (text: string, keywords: string[]): string =>
     }
   }
   return '';
-};
-
-// Generate natural responses about their actual situation
-const generateNaturalSituationResponse = (situation: any, cards: TarotCard[], analysis: DeepAnalysis): string => {
-  const mainCard = cards[1]; // Present moment card
-  
-  switch (situation.type) {
-    case 'relationship':
-      return `The ${mainCard.name} is really interesting for relationship stuff. This card usually shows up when you need to trust your own feelings about someone instead of overthinking it. What's your gut actually telling you about this person or situation? Sometimes we know the answer but we're scared to admit it to ourselves.`;
-    
-    case 'work':
-      return `With work situations, the ${mainCard.name} often means you're being called to show up more authentically. Instead of trying to be what you think they want, what would happen if you just brought your real self to this? Your authentic energy is actually your biggest professional asset.`;
-    
-    case 'family':
-      return `Family stuff is always complex, and the ${mainCard.name} suggests this situation is asking you to find your own center. You can love your family and still have boundaries. What would it look like to stay true to yourself while still being loving?`;
-    
-    case 'decision':
-      return `For decisions, the ${mainCard.name} is basically saying your intuition already knows the answer. All that mental back-and-forth is just noise. What choice feels most like you? What option makes you feel more expansive rather than contracted?`;
-    
-    case 'change':
-      return `Change is uncomfortable but the ${mainCard.name} suggests this transition is actually aligning you with something better. What part of this change feels exciting, even if it's also scary? Sometimes the universe moves us toward what we need even when we resist it.`;
-    
-    case 'fear':
-      return `The ${mainCard.name} often appears when we're afraid of something that's actually good for us. Fear and excitement feel the same in your body - it's just how your mind interprets the energy. What if this fear is actually anticipation for something amazing?`;
-    
-    default:
-      return `The ${mainCard.name} is speaking to whatever you're going through right now. This card usually shows up when you need to trust yourself more and worry about external validation less. Your inner knowing is stronger than you think.`;
-  }
-};
-
-// Natural card readings that connect to their situation
-const generateNaturalCardReadings = (cards: TarotCard[], situation: any): string => {
-  let reading = '';
-  
-  // Foundation card
-  reading += `**${cards[0].name}** - This is your foundation right now. `;
-  if (situation.type) {
-    reading += `For your ${situation.type} situation, this ${cards[0].keywords[0]} energy is what's supporting you. You've got more strength here than you realize.`;
-  } else {
-    reading += `This ${cards[0].keywords[0]} energy is your secret strength. It's been building in you and now it's ready to be used.`;
-  }
-  
-  reading += `\n\n`;
-  
-  // Present moment card
-  reading += `**${cards[1].name}** - This is what's happening right now. `;
-  if (situation.type) {
-    reading += `In your ${situation.type} situation, ${cards[1].keywords[0]} energy is exactly what's needed. This isn't random - this card chose you because this energy is your answer.`;
-  } else {
-    reading += `The ${cards[1].keywords[0]} frequency is what you need to embody right now. Trust this energy completely.`;
-  }
-  
-  reading += `\n\n`;
-  
-  // Guidance card
-  reading += `**${cards[2].name}** - This is your path forward. `;
-  if (situation.type) {
-    reading += `For your ${situation.type} situation, approach it with ${cards[2].keywords[0]} energy. Don't force outcomes - just embody this frequency and let things unfold naturally.`;
-  } else {
-    reading += `${cards[2].keywords[0]} is your guidance. When you're not sure what to do, ask yourself: what would ${cards[2].keywords[0]} energy do here?`;
-  }
-  
-  return reading;
-};
-
-// Personal guidance that feels like talking to a friend
-const generatePersonalGuidance = (situation: any, cards: TarotCard[], analysis: DeepAnalysis, astroData: AstrologyData | null): string => {
-  let guidance = '';
-  
-  if (situation.emotion === 'anxious') {
-    guidance += `I can feel the anxiety in what you shared. That's totally normal when you're dealing with something important. `;
-  } else if (situation.emotion === 'frustrated') {
-    guidance += `The frustration you're feeling makes complete sense. Sometimes we get stuck because we're trying to force something instead of flowing with it. `;
-  } else if (situation.emotion === 'confused') {
-    guidance += `Confusion usually means you're in a growth phase. Your old ways of thinking aren't working anymore, which means you're evolving. `;
-  }
-  
-  guidance += `The thing about your cards is they're not telling you what to do - they're reflecting what you already know deep down. `;
-  
-  if (astroData) {
-    guidance += `Your ${astroData.sunSign} energy gives you the strength to handle this authentically. `;
-  }
-  
-  guidance += `Trust your gut. It's been right about everything important in your life, even when your mind tried to talk you out of it.`;
-  
-  if (situation.type) {
-    guidance += ` With ${situation.type} stuff, the answer is usually simpler than we make it. What feels most true to who you are?`;
-  }
-  
-  return guidance;
-};
-
-// Natural next steps
-const generateNaturalNextSteps = (situation: any, cards: TarotCard[]): string => {
-  const guidanceCard = cards[2];
-  
-  let steps = `Here's what I'd focus on:\n\n`;
-  
-  steps += `1. **Embody ${guidanceCard.keywords[0]} energy** - For the next few days, ask yourself: how would someone with strong ${guidanceCard.keywords[0]} energy handle this?\n\n`;
-  
-  if (situation.type) {
-    switch (situation.type) {
-      case 'relationship':
-        steps += `2. **Trust your feelings** - Your gut knows if this person is right for you. Stop trying to convince yourself either way.\n\n`;
-        break;
-      case 'work':
-        steps += `2. **Show up authentically** - Stop trying to be what you think they want. Your real self is your competitive advantage.\n\n`;
-        break;
-      case 'decision':
-        steps += `2. **Feel into your options** - Which choice makes you feel expansive? Which one contracts you? Your body knows.\n\n`;
-        break;
-      default:
-        steps += `2. **Take one small authentic action** - What's one tiny step that feels true to who you are?\n\n`;
-    }
-  } else {
-    steps += `2. **Take one aligned action** - What's one small step that feels authentic to you?\n\n`;
-  }
-  
-  steps += `3. **Notice what feels expansive vs. contractive** - Your body is always giving you information about what's right for you.\n\n`;
-  
-  steps += `4. **Trust the process** - You're exactly where you need to be, even if it doesn't feel like it right now.`;
-  
-  return steps;
 };
 
 // Enhanced text analysis

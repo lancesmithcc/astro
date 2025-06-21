@@ -88,7 +88,7 @@ The tarot card system now displays actual card images fetched from the API, with
 - [ ] Monitor app in production for any residual missing‐image reports and introduce further fallbacks if needed.
 
 ### Response Formatting
-- [x] Prepend each generated insight with concise bullet-point **Technical Energies** (astro snapshot, card energies, metrics) followed by interpretation & real-life applications.
+- [x] Use technical data (astrology, cards) as internal knowledge to inform the AI's interpretation rather than printing it directly in the output.
 - [ ] Review other response types (follow-up, clarifying) to adopt the same structure if needed.
 
 ### Divine Channel

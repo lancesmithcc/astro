@@ -350,8 +350,8 @@ Time to let three cards choose you. Your ${astroData?.moonSign} Moon knows exact
       setCurrentStep('final');
     } else if (currentStep === 'final') {
       // Generate ENHANCED final reading with COMPLETE SITUATIONAL analysis
-      setTimeout(() => {
-        const enhancedInsight = generateEnhancedInsight(selectedCards, [...userResponses, currentInput], birthData, astroData);
+      setTimeout(async () => {
+        const enhancedInsight = await generateEnhancedInsight(selectedCards, [...userResponses, currentInput], birthData, astroData);
         setFinalReading(enhancedInsight); // Store the final reading
         addMysticMessage(enhancedInsight, 'analysis', astroData || undefined, deepAnalysis || undefined);
         
