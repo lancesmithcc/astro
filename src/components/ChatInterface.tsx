@@ -344,8 +344,7 @@ Time to let three cards choose you. Your ${astroData?.moonSign} Moon knows exact
       // Generate enhanced deeper insight with SITUATIONAL analysis
       if (deepAnalysis) {
         const followUp = await generateEnhancedFollowUpQuestion(selectedCards, userResponses, deepAnalysis, finalReading);
-        const astroContext = astroData ? `Your ${astroData.northNode.split(' - ')[0]} North Node is asking: ${followUp}` : followUp;
-        addMysticMessage(astroContext, 'deep-analysis', astroData || undefined, deepAnalysis || undefined);
+        addMysticMessage(followUp, 'deep-analysis', astroData || undefined, deepAnalysis || undefined);
       }
       setCurrentStep('final');
     } else if (currentStep === 'final') {
