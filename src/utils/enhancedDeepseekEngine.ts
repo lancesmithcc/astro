@@ -106,6 +106,8 @@ export const generateEnhancedInsight = async (
     Speak naturally, like you are talking to a friend. Be encouraging and focus on their inner power and potential.
   `;
 
+  console.log("🔮 Sending this prompt to DeepSeek:", prompt);
+
   try {
     const response = await fetch("https://api.deepseek.com/chat/completions", {
       method: "POST",
@@ -132,6 +134,13 @@ export const generateEnhancedInsight = async (
     }
 
     const data = await response.json();
+    console.log("✅ Received response from DeepSeek:", data);
+    
+    if (!data.choices || data.choices.length === 0 || !data.choices[0].message.content) {
+      console.error("❌ DeepSeek response is missing expected content.", data);
+      return "The cosmic energies are a bit hazy at the moment. I can't seem to form a clear picture. Please try again later.";
+    }
+
     return data.choices[0].message.content;
 
   } catch (error) {
